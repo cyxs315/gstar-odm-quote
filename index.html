@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GSTAR ODM 报价系统</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='2' y='2' width='28' height='28' rx='6' fill='%230E7C6B'/%3E%3Cpath d='M9 23V11h3.2l3.2 6.6 3.2-6.6H22v12h-3V16.2L16 21.4l-3-5.2V23z' fill='%23FFFFFF'/%3E%3C/svg%3E">
+<style>
+:root{
+  --bg:#F4F7F8; --surface:#FFFFFF; --ink:#17222C; --sub:#5A6B7A; --faint:#8A9BA9;
+  --line:#E1E8EE; --line-2:#C9D4DD;
+  --accent:#0E7C6B; --accent-dark:#0A6255; --accent-soft:#E4F2EF;
+  --price:#C2410C; --price-soft:#FBEADF;
+  --warn:#A16207; --warn-soft:#FDF3D7;
+  --radius:12px; --radius-sm:8px;
+  --shadow:0 1px 2px rgba(23,34,44,.05),0 6px 18px rgba(23,34,44,.06);
+  --shadow-lg:0 8px 30px rgba(23,34,44,.12);
+  --font:"PingFang SC","Microsoft YaHei","Noto Sans SC","Segoe UI",sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{font-family:var(--font);background:var(--bg);color:var(--ink);line-height:1.55;font-size:15px}
+button,input,select{font-family:inherit;font-size:inherit}
+button{cursor:pointer;border:none;background:none;color:inherit}
+img{max-width:100%;display:block}
+.num{font-variant-numeric:tabular-nums}
+a{color:var(--accent);text-decoration:none}
+
+/* ===== 顶栏 ===== */
+.app-header{position:sticky;top:0;z-index:30;background:rgba(255,255,255,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.header-inner{max-width:1080px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:12px}
+.brand{display:flex;align-items:center;gap:9px;font-weight:700;font-size:16px;letter-spacing:.2px}
+.brand svg{flex:none}
+.brand .sub{display:block;font-size:11px;font-weight:500;color:var(--sub);letter-spacing:.5px}
+.header-actions{margin-left:auto;display:flex;gap:8px;align-items:center}
+.seg{display:flex;background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:2px;gap:2px}
+.seg button{padding:4px 12px;border-radius:999px;font-size:13px;color:var(--sub);transition:background .15s,color .15s}
+.seg button.on{background:var(--surface);color:var(--ink);font-weight:600;box-shadow:0 1px 3px rgba(23,34,44,.12)}
+.icon-btn{width:34px;height:34px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;color:var(--sub);border:1px solid var(--line);background:var(--surface);transition:border-color .15s,color .15s}
+.icon-btn:hover{color:var(--accent);border-color:var(--accent)}
+
+/* ===== 布局 ===== */
+.wrap{max-width:1080px;margin:0 auto;padding:18px 16px 64px}
+.section-title{font-size:15px;font-weight:700;margin:0 0 12px;display:flex;align-items:center;gap:8px}
+.section-title .tag{font-size:11px;font-weight:500;color:var(--accent);background:var(--accent-soft);padding:2px 8px;border-radius:999px}
+
+/* ===== 首页：品类选择 ===== */
+.home-hero{padding:34px 0 8px;text-align:center}
+.home-hero h1{font-size:26px;font-weight:800;letter-spacing:.3px}
+.home-hero p{margin-top:8px;color:var(--sub);font-size:14px}
+.cat-grid{display:grid;grid-template-columns:1fr;gap:14px;margin-top:26px}
+@media (min-width:720px){.cat-grid{grid-template-columns:repeat(2,1fr)}}
+.cat-card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:22px 20px;text-align:left;display:flex;flex-direction:column;gap:10px;box-shadow:var(--shadow);transition:transform .15s,border-color .15s,box-shadow .15s;position:relative;overflow:hidden}
+.cat-card:hover{transform:translateY(-2px);border-color:var(--accent);box-shadow:var(--shadow-lg)}
+.cat-card .ico{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:var(--accent-soft);color:var(--accent)}
+.cat-card h2{font-size:18px;font-weight:700}
+.cat-card .desc{font-size:13px;color:var(--sub);min-height:38px}
+.cat-card .meta{font-size:12px;color:var(--faint);border-top:1px dashed var(--line);padding-top:9px;margin-top:2px}
+.cat-card .go{margin-top:auto;display:inline-flex;align-items:center;gap:6px;color:var(--accent);font-weight:600;font-size:14px}
+
+/* ===== 报价页布局 ===== */
+.quote-head{display:flex;align-items:center;gap:10px;margin:2px 0 14px}
+.quote-head .back{width:34px;height:34px;border-radius:9px;border:1px solid var(--line);background:var(--surface);display:inline-flex;align-items:center;justify-content:center;color:var(--sub)}
+.quote-head h1{font-size:19px;font-weight:800;flex:1;min-width:0}
+.quote-head .pill{font-size:12px;color:var(--accent);background:var(--accent-soft);border-radius:999px;padding:3px 10px;font-weight:600;white-space:nowrap}
+.layout{display:grid;grid-template-columns:1fr;gap:18px;align-items:start}
+@media (min-width:920px){.layout{grid-template-columns:1fr 380px}}
+
+/* ===== 配置器 ===== */
+.config{display:flex;flex-direction:column;gap:12px}
+.opt-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px 14px 15px;box-shadow:var(--shadow)}
+.opt-label{font-size:13px;font-weight:700;margin-bottom:9px;display:flex;align-items:baseline;gap:8px}
+.opt-label .note{font-weight:400;color:var(--faint);font-size:12px;margin-left:auto}
+.chips{display:flex;flex-wrap:wrap;gap:7px;align-items:center}
+.chips .sub{display:inline-block;margin:2px 6px 2px 0;font-size:12px;font-weight:600;color:var(--sub)}
+.chip{border:1px solid var(--line-2);background:var(--surface);border-radius:999px;padding:6px 13px;font-size:13px;color:var(--ink);transition:all .13s;line-height:1.3}
+.chip:hover{border-color:var(--accent)}
+.chip.on{border-color:var(--accent);background:var(--accent);color:#fff;font-weight:600}
+.chip .delta{display:inline-block;margin-left:5px;font-size:12px;color:var(--price);font-variant-numeric:tabular-nums}
+.chip.on .delta{color:#FDEBD8}
+.chip.dim{opacity:.42;pointer-events:none}
+.qty-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.qty-input{width:130px;padding:9px 12px;border:1px solid var(--line-2);border-radius:9px;font-size:16px;font-variant-numeric:tabular-nums;background:var(--surface)}
+.qty-input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(14,124,107,.14)}
+.qty-hint{font-size:12px;color:var(--sub)}
+
+/* ===== 报价结果 ===== */
+.result-col{display:flex;flex-direction:column;gap:14px;position:sticky;top:64px}
+.result-card{background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow-lg);overflow:hidden}
+.result-head{background:linear-gradient(135deg,var(--accent-dark),var(--accent));color:#fff;padding:13px 16px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.result-head .t{font-weight:700;font-size:14px}
+.result-head .t small{display:block;font-weight:400;opacity:.85;font-size:11px}
+.result-body{padding:15px 16px}
+.rows{display:flex;flex-direction:column}
+.row{display:flex;justify-content:space-between;align-items:baseline;padding:6px 0;font-size:13px;color:var(--sub);gap:12px;border-bottom:1px dashed var(--line)}
+.row:last-child{border-bottom:none}
+.row .k{min-width:0}
+.row .v{font-variant-numeric:tabular-nums;font-weight:600;color:var(--ink);white-space:nowrap}
+.row.total{font-size:15px;color:var(--ink);padding:10px 0 8px;border-bottom:2px solid var(--ink);border-top:2px solid var(--ink);margin-top:4px}
+.row.total .k{font-weight:700}
+.row.total .v{font-size:22px;font-weight:800;color:var(--price)}
+.row .hint{font-size:11px;color:var(--faint);display:block;font-weight:400}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;padding:0 16px 15px}
+.btn{border-radius:10px;padding:11px 10px;font-size:14px;font-weight:700;text-align:center;display:inline-flex;align-items:center;justify-content:center;gap:7px;transition:filter .12s,transform .1s}
+.btn:active{transform:scale(.98)}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{filter:brightness(1.07)}
+.btn-ghost{background:var(--bg);color:var(--ink);border:1px solid var(--line-2)}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent)}
+.btn-warn{background:var(--price);color:#fff}
+.btn-warn:hover{filter:brightness(1.07)}
+.btn-block{grid-column:1/-1}
+
+/* ===== 报价文本 ===== */
+.quote-text-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px}
+.quote-text{white-space:pre-wrap;font-size:13px;line-height:1.7;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:12px;max-height:340px;overflow:auto;font-variant-numeric:tabular-nums}
+.copy-hint{font-size:11px;color:var(--faint);margin-top:7px}
+
+/* ===== 价目参考 ===== */
+.ref-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:15px 14px;overflow:hidden}
+.table-scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12.5px;table-layout:fixed}
+th,td{padding:8px 8px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-weight:700;color:var(--sub);white-space:nowrap}
+td{color:var(--ink)}
+td.r,th.r{text-align:right}
+tbody tr:hover{background:#FAFCFC}
+.tbl-note{font-size:12px;color:var(--sub);margin-top:10px;background:var(--bg);border-radius:8px;padding:9px 11px}
+.tbl-note b{color:var(--price)}
+
+/* ===== 商务条款 ===== */
+.terms{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px}
+.terms summary{cursor:pointer;font-weight:700;font-size:14px;display:flex;align-items:center;gap:8px;list-style:none}
+.terms summary::-webkit-details-marker{display:none}
+.terms summary .caret{transition:transform .15s;color:var(--faint);font-size:12px}
+.terms[open] summary .caret{transform:rotate(90deg)}
+.terms ul{margin:12px 0 0 2px;list-style:none;display:flex;flex-direction:column;gap:8px}
+.terms li{font-size:13px;color:var(--sub);padding-left:14px;position:relative}
+.terms li:before{content:"";position:absolute;left:0;top:8px;width:5px;height:5px;border-radius:50%;background:var(--accent)}
+.terms li b{color:var(--ink)}
+
+/* ===== 维护面板 ===== */
+.scrim{position:fixed;inset:0;background:rgba(23,34,44,.45);z-index:50;opacity:0;pointer-events:none;visibility:hidden;transition:opacity .18s}
+.scrim.show{opacity:1;pointer-events:auto;visibility:visible}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:60;background:var(--surface);border-radius:18px 18px 0 0;max-height:88vh;display:flex;flex-direction:column;transform:translateY(102%);visibility:hidden;transition:transform .22s cubic-bezier(.32,.72,0,1),visibility 0s .22s}
+.sheet.show{transform:translateY(0);visibility:visible;transition:transform .22s cubic-bezier(.32,.72,0,1)}
+.sheet-head{padding:14px 18px 8px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)}
+.sheet-head h2{font-size:16px;font-weight:800}
+.sheet-body{overflow-y:auto;padding:14px 18px 22px}
+.sheet-body h3{font-size:13px;font-weight:700;margin:14px 0 8px;color:var(--sub)}
+.sheet-body h3:first-child{margin-top:0}
+.param-grid{display:grid;grid-template-columns:1fr;gap:8px}
+@media (min-width:640px){.param-grid{grid-template-columns:repeat(2,1fr)}}
+.param{display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:6px 10px}
+.param .p-label{flex:1;font-size:12.5px;color:var(--ink);min-width:0}
+.param .p-label small{display:block;color:var(--faint);font-size:11px}
+.param input{width:92px;padding:6px 8px;border:1px solid var(--line-2);border-radius:7px;font-size:14px;text-align:right;font-variant-numeric:tabular-nums;background:var(--surface)}
+.param input:focus{outline:none;border-color:var(--accent)}
+.sheet-foot{padding:10px 18px 18px;display:flex;gap:9px;border-top:1px solid var(--line)}
+.sheet-foot .btn{flex:1}
+
+/* ===== toast ===== */
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;font-size:13px;padding:10px 18px;border-radius:999px;z-index:80;opacity:0;transition:all .2s;pointer-events:none;box-shadow:var(--shadow-lg)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ===== 打印 ===== */
+@media print{
+  body{background:#fff}
+  .app-header,.home-hero,.quote-head .back,.actions,.config,.ref-card,.terms,.sheet,.scrim,.toast{display:none!important}
+  .wrap{padding:0}
+  .layout{display:block}
+  .result-col{position:static}
+  .result-card{box-shadow:none;border:1px solid #333}
+  .row.total .v{color:#000}
+  .quote-text{max-height:none;border:1px solid #999}
+}
+</style>
+</head>
+<body>
+
+<!-- ===== 顶栏 ===== -->
+<header class="app-header">
+  <div class="header-inner">
+    <div class="brand" id="brandHome" role="button" tabindex="0">
+      <svg width="26" height="26" viewBox="0 0 32 32" aria-hidden="true"><rect x="2" y="2" width="28" height="28" rx="6" fill="#0E7C6B"/><path d="M9 23V11h3.2l3.2 6.6 3.2-6.6H22v12h-3V16.2L16 21.4l-3-5.2V23z" fill="#fff"/></svg>
+      <span>GSTAR ODM 报价系统<span class="sub" data-cn="评级卡卡套 · 钱包 · 出厂含税价" data-en="Card Slabs · Wallets · Factory Price">评级卡卡套 · 钱包 · 出厂含税价</span></span>
+    </div>
+    <div class="header-actions">
+      <div class="seg" id="langSeg">
+        <button type="button" data-lang="cn" class="on">中</button>
+        <button type="button" data-lang="en">EN</button>
+      </div>
+      <div class="seg" id="curSeg">
+        <button type="button" data-cur="cny" class="on">¥</button>
+        <button type="button" data-cur="usd">$</button>
+      </div>
+      <button type="button" class="icon-btn" id="btnAdmin" title="参数维护" aria-label="参数维护">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- ===== 首页 ===== -->
+  <section id="view-home" class="view">
+    <div class="home-hero">
+      <h1 data-cn="ODM 快速报价系统" data-en="ODM Quick Quotation System">ODM 快速报价系统</h1>
+      <p data-cn="选择品类，配置规格，即时生成含税出厂报价。价格参数可在后台维护，中英双语、CNY / USD 切换。" data-en="Pick a category, configure specs, get an instant factory price. Editable price base, bilingual, CNY / USD.">选择品类，配置规格，即时生成含税出厂报价。价格参数可在后台维护，中英双语、CNY / USD 切换。</p>
+    </div>
+    <div class="cat-grid">
+      <button type="button" class="cat-card" data-cat="cardslab">
+        <span class="ico">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2.5" width="14" height="19" rx="2.5"/><path d="M5 7.5h14M9 2.5v5M15 2.5v5"/><path d="M9.5 12h5M9.5 15.5h5" stroke-opacity=".55"/></svg>
+        </span>
+        <h2 data-cn="评级卡卡套" data-en="Trading Card Slabs">评级卡卡套</h2>
+        <span class="desc" data-cn="PSA / CGC / BGS 评级砖保护壳：塑胶款（PC / TPU+PC / 硅胶+PC）与铝合金磁吸 / 卡扣款，防 UV、抗散边、超声波封合。" data-en="PSA / CGC / BGS graded card slabs: plastic (PC / TPU+PC / Silicone+PC) and aluminum magnetic / snap cases.">PSA / CGC / BGS 评级砖保护壳：塑胶款（PC / TPU+PC / 硅胶+PC）与铝合金磁吸 / 卡扣款，防 UV、抗散边、超声波封合。</span>
+        <span class="meta" data-cn="公模 MOQ 500pcs · 阶梯价 ≥2000 下浮 8% · ≥5000 下浮 15%" data-en="Stock MOQ 500pcs · Tier -8% @2000 · -15% @5000">公模 MOQ 500pcs · 阶梯价 ≥2000 下浮 8% · ≥5000 下浮 15%</span>
+        <span class="go" data-cn="开始配置 →" data-en="Configure →">开始配置 →</span>
+      </button>
+      <button type="button" class="cat-card" data-cat="wallet">
+        <span class="ico">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5.5" width="17" height="13" rx="2.5"/><path d="M3.5 10h17"/><rect x="15" y="13" width="4" height="2.4" rx="1"/></svg>
+        </span>
+        <h2 data-cn="钱包 ODM" data-en="Wallet ODM">钱包 ODM</h2>
+        <span class="desc" data-cn="商务 / 户外 / 证件夹 / 定制特殊款。二折三折一折、扩容带、金属外壳；皮革·金属·碳纤维·木纹 19 种材质；表面处理、配件（追踪器/拉链/挂绳）、RFID 单卡位 / 全袋、尺寸颜色可选。" data-en="Biz / outdoor / card case / custom. Folds & metal shell; 19 materials (leather/metal/carbon/wood); surface finish, accessories (tracker/zipper/strap), RFID single/full, size & color.">商务 / 户外 / 证件夹 / 定制特殊款。二折三折一折、扩容带、金属外壳；皮革·金属·碳纤维·木纹 19 种材质；表面处理、配件（追踪器/拉链/挂绳）、RFID 单卡位 / 全袋、尺寸颜色可选。</span>
+        <span class="meta" data-cn="公模 MOQ 500pcs · 私模一般 3000pcs 起" data-en="Stock MOQ 500pcs · Custom mold 3000pcs+">公模 MOQ 500pcs · 私模一般 3000pcs 起</span>
+        <span class="go" data-cn="开始配置 →" data-en="Configure →">开始配置 →</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- ===== 报价页 ===== -->
+  <section id="view-quote" class="view" hidden>
+    <div class="quote-head">
+      <button type="button" class="back" id="btnBack" aria-label="返回">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <h1 id="quoteTitle">评级卡卡套</h1>
+      <span class="pill" data-cn="含税出厂 · 默认 EXW 东莞" data-en="Tax incl. · EXW Dongguan">含税出厂 · 默认 EXW 东莞</span>
+    </div>
+
+    <div class="layout">
+      <div class="config" id="configBox"><!-- 配置器由 JS 渲染 --></div>
+
+      <div class="result-col">
+        <div class="result-card">
+          <div class="result-head">
+            <span class="t" data-cn="报价结果" data-en="Quote Result">报价结果<span data-cn="实时计算 · 修改即更新" data-en="Live · updates on change">实时计算 · 修改即更新</span></span>
+            <span class="t num" id="resQty">0 pcs</span>
+          </div>
+          <div class="result-body" id="resultBody"><!-- 结果明细由 JS 渲染 --></div>
+          <div class="actions">
+            <button type="button" class="btn btn-primary" id="btnCopy"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><span data-cn="复制报价" data-en="Copy Quote">复制报价</span></button>
+            <button type="button" class="btn btn-ghost" id="btnPrint"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8" rx="1"/></svg><span data-cn="打印 / PDF" data-en="Print / PDF">打印 / PDF</span></button>
+            <button type="button" class="btn btn-ghost btn-block" id="btnReset" data-cn="重置配置" data-en="Reset">重置配置</button>
+          </div>
+        </div>
+
+        <div class="quote-text-card">
+          <div class="section-title"><span data-cn="可直接发送的报价文本" data-en="Ready-to-send quote text">可直接发送的报价文本</span><span class="tag" data-cn="复制后发 WhatsApp / 邮件" data-en="Copy to WhatsApp / Email">复制后发 WhatsApp / 邮件</span></div>
+          <div class="quote-text" id="quoteText"></div>
+          <div class="copy-hint" data-cn="点击「复制报价」一键复制；USD 版按汇率换算。" data-en="One-click copy; USD converted at set rate.">点击「复制报价」一键复制；USD 版按汇率换算。</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-title" style="margin-top:26px"><span data-cn="完整价目参考" data-en="Full Price Reference">完整价目参考</span><span class="tag" data-cn="与配置器同源 · 后台改价自动同步" data-en="Same source · auto-sync">与配置器同源 · 后台改价自动同步</span></div>
+    <div id="refTables"><!-- 价目表由 JS 渲染 --></div>
+
+    <div class="section-title" style="margin-top:26px"><span data-cn="商务条款" data-en="Business Terms">商务条款</span><span class="tag" data-cn="发送前请确认" data-en="Review before sending">发送前请确认</span></div>
+    <details class="terms" open>
+      <summary><span class="caret">▶</span><span data-cn="标准商务条款（Terms）" data-en="Standard Terms">标准商务条款（Terms）</span></summary>
+      <ul id="termsList"><!-- 条款由 JS 渲染 --></ul>
+    </details>
+  </section>
+</main>
+
+<!-- ===== 维护面板 ===== -->
+<div class="scrim" id="scrim"></div>
+<div class="sheet" id="sheet" role="dialog" aria-label="参数维护">
+  <div class="sheet-head">
+    <h2 data-cn="价格参数维护" data-en="Price Base Maintenance">价格参数维护</h2>
+    <button type="button" class="icon-btn" id="btnSheetClose" aria-label="关闭">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+  </div>
+  <div class="sheet-body" id="sheetBody"><!-- 参数表单由 JS 渲染 --></div>
+  <div class="sheet-foot">
+    <button type="button" class="btn btn-primary" id="btnSaveParams" data-cn="保存更改" data-en="Save Changes">保存更改</button>
+    <button type="button" class="btn btn-ghost" id="btnResetParams" data-cn="恢复默认价" data-en="Restore Defaults">恢复默认价</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+'use strict';
+
+/* ================= 参数库（与另一对话报价表同源） ================= */
+var DEFAULTS = {
+  rate: 7.1,
+  cardslab: {
+    types: [
+      {id:'pc',      cn:'PC 透明卡砖',   en:'PC Clear Slab',     base:2.60, group:'plastic', cnNote:'标准 PSA 卡砖，超声波焊接，防 UV 料另加 0.4', enNote:'Standard PSA slab, ultrasonic, UV material +0.4'},
+      {id:'tpu_pc',  cn:'TPU+PC 包边',   en:'TPU+PC Soft Edge',  base:3.20, group:'plastic', cnNote:'TPU 软包边，防摔抗散边，跨境爆款', enNote:'TPU soft edge, drop-resistant, bestseller'},
+      {id:'sili',    cn:'硅胶+PC',       en:'Silicone+PC',       base:3.60, group:'plastic', cnNote:'硅胶缓冲，手感哑光，电镀良率低', enNote:'Silicone cushion, matte, plating low yield'},
+      {id:'alu_mag', cn:'铝合金磁吸壳',  en:'Alu Magnetic',      base:18.5, group:'alu',     cnNote:'双玻璃背板，强磁、防 UV 玻璃', enNote:'Dual glass, strong magnet, UV glass'},
+      {id:'alu_snap',cn:'铝合金卡扣壳',  en:'Alu Snap-Lock',     base:16.2, group:'alu',     cnNote:'无磁方案，适合部分平台禁磁客户', enNote:'Magnet-free, platform compliant'}
+    ],
+    pt: [
+      {id:'35', cn:'35PT 标准', en:'35PT Std', val:0},
+      {id:'55', cn:'55PT',      en:'55PT',     val:0.3},
+      {id:'75', cn:'75PT',      en:'75PT',     val:0.5},
+      {id:'100',cn:'100PT',     en:'100PT',    val:0.8},
+      {id:'130',cn:'130PT',     en:'130PT',    val:1.2},
+      {id:'180',cn:'180PT',     en:'180PT',    val:1.8}
+    ],
+    clarity: [
+      {id:'std', cn:'普通透料',   en:'Std Clear',   val:0},
+      {id:'a',   cn:'A 级高透',   en:'A-Grade',     val:0.5},
+      {id:'opt', cn:'光学级无波纹',en:'Optical No-Ripple', val:1.2}
+    ],
+    finish: {
+      plastic: [
+        {id:'polish', cn:'透明抛光', en:'Clear Polish', val:0},
+        {id:'spray',  cn:'喷油 / 喷粉', en:'Spray Paint', val:0.6},
+        {id:'electro',cn:'电镀',     en:'Electroplating', val:1.3},
+        {id:'vac',    cn:'真空镀',   en:'Vacuum Plating', val:1.4}
+      ],
+      alu: [
+        {id:'anod',   cn:'阳极氧化', en:'Anodized', val:0},
+        {id:'polish', cn:'透明抛光', en:'Clear Polish', val:0},
+        {id:'spray',  cn:'喷油 / 喷粉', en:'Spray Paint', val:2.8},
+        {id:'electro',cn:'电镀',     en:'Electroplating', val:4.2},
+        {id:'vac',    cn:'真空镀',   en:'Vacuum Plating', val:4.5}
+      ]
+    },
+    glass: [
+      {id:'w20', cn:'2.0mm 白玻',  en:'2.0mm Clear', val:0},
+      {id:'w25', cn:'2.5mm 白玻',  en:'2.5mm Clear', val:1.2},
+      {id:'ag',  cn:'AG 防眩光',   en:'AG Anti-Glare', val:2.2},
+      {id:'af',  cn:'AF 防指纹',   en:'AF Anti-Fingerprint', val:2.5},
+      {id:'uv',  cn:'防 UV 高透',  en:'UV High-Trans', val:2.2}
+    ],
+    feature: [
+      {id:'none', cn:'无',          en:'None', val:0},
+      {id:'uv',   cn:'防 UV 原料',  en:'UV-Resistant', val:0.5},
+      {id:'wear', cn:'耐磨涂层',    en:'Scratch Coating', val:0.5},
+      {id:'esd',  cn:'ESD 防静电',  en:'ESD Anti-Static', val:0.8}
+    ],
+    logo: [
+      {id:'none',  cn:'无',          en:'None', val:0},
+      {id:'laser', cn:'激光镭雕',    en:'Laser Engraving', val:0.5},
+      {id:'screen',cn:'丝印',        en:'Screen Print', val:0.7}
+    ],
+    pack: [
+      {id:'opp',    cn:'OPP 袋',      en:'OPP Bag', val:0},
+      {id:'bubble', cn:'独立气泡袋',  en:'Bubble Bag', val:0.5},
+      {id:'white',  cn:'白盒',        en:'White Box', val:1.8},
+      {id:'color',  cn:'彩盒',        en:'Color Box', val:3.5}
+    ],
+    mold: [
+      {id:'stock',  cn:'公模（免模具费）', en:'Stock Mold (Free)', val:0},
+      {id:'plastic',cn:'塑胶私模',         en:'Plastic Custom Mold', val:8000},
+      {id:'alu',    cn:'铝合金私模',       en:'Alu Custom Mold', val:15000}
+    ],
+    tier: [
+      {min:0,    label_cn:'＜500 加价 10%', label_en:'<500 +10%', factor:1.10},
+      {min:500,  label_cn:'500–1999 基准',  label_en:'500–1999 base', factor:1.00},
+      {min:2000, label_cn:'≥2000 下浮 8%',  label_en:'≥2000 -8%', factor:0.92},
+      {min:5000, label_cn:'≥5000 下浮 15%', label_en:'≥5000 -15%', factor:0.85}
+    ]
+  },
+  wallet: {
+    types: [
+      {id:'biz',     cn:'商务钱包',     en:'Biz Wallet',       base:12.8, cnNote:'牛皮 / PU / 超纤 / 帆布', enNote:'Leather / PU / Microfiber / Canvas'},
+      {id:'outdoor', cn:'运动 / 户外钱包', en:'Outdoor Wallet', base:9.5,  cnNote:'尼龙 / 涤纶 / TPU 复合', enNote:'Nylon / Polyester / TPU'},
+      {id:'cardcase',cn:'证件夹 / 卡包', en:'Card Case',        base:6.8,  cnNote:'皮革 / PVC / 硅胶 / 金属边框', enNote:'Leather / PVC / Silicone / Metal Frame'},
+      {id:'custom',  cn:'定制特殊款',    en:'Custom Special',   base:26.0, cnNote:'金属外壳 + 皮革 / 硅胶复合', enNote:'Metal Shell + Leather / Silicone'}
+    ],
+    style: [
+      {id:'fold2',   cn:'二折叠',     en:'Bi-Fold',        val:0},
+      {id:'fold3',   cn:'三折叠',     en:'Tri-Fold',       val:1.8},
+      {id:'fold1',   cn:'一折',       en:'Single-Fold',    val:-0.5},
+      {id:'expand',  cn:'扩容带',     en:'Expansion Band', val:1.5},
+      {id:'zipper',  cn:'拉链款',     en:'Zipper Style',   val:2.5},
+      {id:'shell',   cn:'金属外壳款', en:'Metal Shell',    val:12.0}
+    ],
+    closure: [
+      {id:'elastic', cn:'弹力带',     en:'Elastic Band', val:0},
+      {id:'snap',    cn:'弹卡',       en:'Snap',         val:0},
+      {id:'button',  cn:'纽扣',       en:'Button',       val:0.3},
+      {id:'magnet',  cn:'磁吸',       en:'Magnet',       val:0.8},
+      {id:'zip',     cn:'拉链',       en:'Zipper',       val:1.2}
+    ],
+    material: [
+      // 皮革类
+      {id:'std',      cn:'二层皮 / 超纤', en:'2nd Layer / Microfiber', val:0,    group:'leather'},
+      {id:'pu',       cn:'PU 皮',        en:'PU Leather',              val:0,    group:'leather'},
+      {id:'top',      cn:'头层牛皮',     en:'Top-Grain Leather',       val:4.5,  group:'leather'},
+      {id:'regen',    cn:'再生皮',       en:'Regenerated Leather',     val:-1.0, group:'leather'},
+      // 面料类
+      {id:'nylon',    cn:'尼龙 / 涤纶',  en:'Nylon / Polyester',       val:0,    group:'fabric'},
+      {id:'cordura',  cn:'考杜拉 Cordura', en:'Cordura',               val:1.8,  group:'fabric'},
+      {id:'xpac',     cn:'X-Pac',        en:'X-Pac',                   val:3.2,  group:'fabric'},
+      {id:'waterproof',cn:'防水复合面料', en:'Waterproof Fabric',      val:1.6,  group:'fabric'},
+      // 高分子 / 复合材料
+      {id:'tpu',      cn:'TPU',          en:'TPU',                     val:0.5,  group:'polymer'},
+      {id:'pom',      cn:'POM / PA6',    en:'POM / PA6',               val:0.6,  group:'polymer'},
+      {id:'carbon',   cn:'碳纤维',       en:'Carbon Fiber',            val:8.0,  group:'polymer'},
+      {id:'resin',    cn:'树脂 / 玻纤板', en:'Resin / Fiberglass',     val:2.5,  group:'polymer'},
+      // 金属类
+      {id:'alu',      cn:'铝合金',       en:'Aluminum Alloy',          val:5.0,  group:'metal'},
+      {id:'steel',    cn:'不锈钢',       en:'Stainless Steel',         val:6.0,  group:'metal'},
+      {id:'titanium', cn:'钛合金',       en:'Titanium',                val:15.0, group:'metal'},
+      {id:'brass',    cn:'黄铜',         en:'Brass',                   val:4.0,  group:'metal'},
+      {id:'zinc',     cn:'锌合金',       en:'Zinc Alloy',              val:4.5,  group:'metal'},
+      // 特殊
+      {id:'wood',     cn:'木纹',         en:'Wood',                    val:6.0,  group:'special'},
+      {id:'forge',    cn:'锻造纹',       en:'Forged Texture',          val:9.0,  group:'special'}
+    ],
+    metalFinish: [
+      {id:'anod',    cn:'喷砂阳极（默认）', en:'Sandblasted Anodized', val:0},
+      {id:'pvd',     cn:'PVD 真空镀',     en:'PVD Coating',            val:12.0},
+      {id:'polish',  cn:'抛光',           en:'Polished',               val:4.0},
+      {id:'brush',   cn:'拉丝',           en:'Brushed',                val:2.0},
+      {id:'laser',   cn:'镭雕',           en:'Laser Etch',             val:1.5},
+      {id:'powder',  cn:'喷塑',           en:'Powder Coating',         val:2.0},
+      {id:'dropoil', cn:'滴油',           en:'Drop Oil',               val:2.5},
+      {id:'antique', cn:'仿古做旧',       en:'Antique Finish',         val:3.0}
+    ],
+    craft: [
+      {id:'stamp',   cn:'金属冲压', en:'Metal Stamping',  val:0},
+      {id:'cnc',     cn:'CNC',      en:'CNC',             val:1.0},
+      {id:'diecast', cn:'压铸',     en:'Die Casting',     val:2.0},
+      {id:'stitch',  cn:'拼接缝制', en:'Stitching',       val:0},
+      {id:'weld',    cn:'焊接',     en:'Welding',         val:1.5},
+      {id:'rivet',   cn:'铆接',     en:'Riveting',        val:1.0},
+      {id:'bond',    cn:'粘合',     en:'Bonding',         val:0}
+    ],
+    leatherCraft: {
+      stitch: [
+        {id:'normal', cn:'普通车线', en:'Regular Stitch', val:0},
+        {id:'saddle', cn:'马鞍线',   en:'Saddle Stitch',  val:2.0}
+      ],
+      edge: [
+        {id:'normal_edge', cn:'普通油边',   en:'Regular Edge Paint', val:0},
+        {id:'premium_edge',cn:'高档封边油', en:'Premium Edge Paint', val:1.1}
+      ],
+      lining: [
+        {id:'nonwoven', cn:'无纺布内衬', en:'Nonwoven Lining',  val:0},
+        {id:'microfiber',cn:'超纤内衬',  en:'Microfiber Lining',val:0.8},
+        {id:'flock',   cn:'植绒内衬',   en:'Flocked Lining',    val:1.6}
+      ]
+    },
+    func: [
+      {id:'rfid_single', cn:'RFID 单卡位屏蔽', en:'RFID Single-Slot Shield', val:1.5},
+      {id:'rfid_full',   cn:'RFID 全袋屏蔽',   en:'RFID Full-Pocket Shield', val:2.5},
+      {id:'guard',       cn:'防折弯加固片',   en:'Anti-Bend Guard Plate',    val:1.3},
+      {id:'slot_nonstd', cn:'非标卡位',       en:'Non-Std Slot (RC/ID/PP)',  val:2.0},
+      {id:'elastic6',    cn:'弹力 6 卡位',    en:'Elastic 6-Slot',           val:0.9},
+      {id:'elastic8',    cn:'弹力 8 卡位',    en:'Elastic 8-Slot',           val:1.8},
+      {id:'detach',      cn:'可拆结构',       en:'Detachable Structure',     val:3.0},
+      {id:'saltuv',      cn:'防盐雾 / 耐 UV', en:'Salt-Spray / UV Resistant',val:1.5}
+    ],
+    accessories: [
+      {id:'tracker', cn:'追踪器位',       en:'Tracker Pocket',   val:2.0},
+      {id:'zipper',  cn:'拉链',           en:'Zipper',           val:1.2},
+      {id:'button',  cn:'扣子',           en:'Button',           val:0.3},
+      {id:'snapbtn', cn:'按钮（弹合装置）',en:'Snap (Quick-Open)',val:0.5},
+      {id:'strap',   cn:'手腕带 / 挂绳',  en:'Wrist Strap / Lanyard', val:1.0},
+      {id:'pages',   cn:'内页卡片位',     en:'Inner Card Pages', val:0.5}
+    ],
+    logo: [
+      {id:'none',  cn:'无',          en:'None', val:0},
+      {id:'screen',cn:'丝印',        en:'Screen Print', val:0.6},
+      {id:'laser', cn:'激光雕刻',    en:'Laser Engrave', val:0.9},
+      {id:'hot',   cn:'压印烫金',    en:'Hot Foil Stamp', val:1.0},
+      {id:'embro', cn:'刺绣',        en:'Embroidery', val:1.5},
+      {id:'drop',  cn:'滴胶 / 胶章', en:'Epoxy Badge', val:1.8},
+      {id:'plate', cn:'金属铭牌',    en:'Metal Nameplate', val:2.5},
+      {id:'emboss',cn:'热压浮雕',    en:'Emboss / Deboss', val:2.0}
+    ],
+    pack: [
+      {id:'opp',     cn:'OPP 袋（默认免费）', en:'OPP Bag (Free)', val:0},
+      {id:'cotton',  cn:'棉布袋',      en:'Cotton Pouch', val:1.0},
+      {id:'velvet',  cn:'植绒袋',      en:'Velvet Pouch', val:1.8},
+      {id:'blister', cn:'吸塑内托',    en:'Blister Tray', val:1.2},
+      {id:'white',   cn:'白盒',        en:'White Box', val:2.5},
+      {id:'color',   cn:'彩盒',        en:'Color Box', val:4.0},
+      {id:'giftwin', cn:'开窗礼盒',    en:'Window Gift Box', val:6.0},
+      {id:'hangtag', cn:'吊牌 / 洗水标',en:'Hang Tag / Wash Label', val:0.5}
+    ],
+    mold: [
+      {id:'stock',   cn:'公模（免模具费）', en:'Stock (Free)', val:0},
+      {id:'die',     cn:'私模刀模',         en:'Custom Die-Cut', val:800},
+      {id:'metal',   cn:'金属压铸模',       en:'Metal Casting Mold', val:3000}
+    ],
+    devFee: [
+      {id:'none',      cn:'无',           en:'None', val:0},
+      {id:'sample3d',  cn:'3D 打样',      en:'3D Prototype', val:200},
+      {id:'hand',      cn:'手板样',       en:'Hand Sample', val:400},
+      {id:'packdesign',cn:'包装设计打样', en:'Packaging Design Sample', val:300},
+      {id:'die',       cn:'皮具刀模',     en:'Leather Die-Cut', val:800},
+      {id:'metalmold', cn:'金属压铸模',   en:'Metal Casting Mold', val:3000},
+      {id:'remold',    cn:'改模',         en:'Mold Modification', val:300}
+    ],
+    tier: [
+      {min:0,    label_cn:'＜500 加价 15%',     label_en:'<500 +15%', factor:1.15},
+      {min:500,  label_cn:'500–1999 基准',      label_en:'500–1999 base', factor:1.00},
+      {min:2000, label_cn:'≥2000 下浮 8–12%',  label_en:'≥2000 -8~12%', factor:0.90},
+      {min:5000, label_cn:'≥5000 下浮 15–22%', label_en:'≥5000 -15~22%', factor:0.82}
+    ]
+  },
+  terms: [
+    {cn:'报价有效期 30 天；价格为出厂含税参考价，MOQ、LOGO、包装、特殊颜色、新模另计。', en:'Quote valid 30 days; factory tax-incl. reference price. MOQ, logo, packaging, special colors, new mold priced separately.'},
+    {cn:'贸易方式：EXW 东莞（默认）/ FOB 东莞；报价不含运费与出口报关费。', en:'Trade terms: EXW Dongguan (default) / FOB Dongguan; freight and customs excluded.'},
+    {cn:'模具产权：私模由客户全额支付模具费后产权归属客户；工厂免费保管 6 个月，超期收取保管费；改模单独收费。', en:'Mold ownership: transfers to client upon full mold fee payment; free storage 6 months, then storage fee; mold modification charged separately.'},
+    {cn:'样品区分：3D 打印外观样（仅看外观）/ 钢模功能样（可装机测试），价格不同；样板费按约定门槛返还。', en:'Samples: 3D-printed appearance sample / steel-mold functional sample; sample fee refunded at agreed threshold.'},
+    {cn:'付款：开模订单预付 50% 模具费；大货订单预付 30% 货款，余款出货前结清；开模后取消订单模具费不退。', en:'Payment: 50% deposit on mold; 30% deposit on bulk order, balance before shipment; mold fee non-refundable after tooling.'},
+    {cn:'色差与良率：以双方签封样品为验收标准；塑胶焊接、铝壳阳极存在行业合理公差。', en:'Color & yield: approved sample is the acceptance standard; reasonable industry tolerance for plastic welding and anodizing.'},
+    {cn:'阶梯价基于同材质、同结构、同一批出货；混款、分批发货不享受阶梯价。', en:'Tiered pricing applies to same material, same structure, same shipment; mixed or split shipments excluded.'},
+    {cn:'检测报告（ROHS / REACH / 加州 65）单独收费；默认无酸原料，适合收藏卡长期保存。', en:'Test reports (ROHS / REACH / Prop 65) charged separately; acid-free by default for long-term card storage.'},
+    {cn:'MOQ：公模 500pcs 起；新开私模一般 3000pcs 起。', en:'MOQ: stock mold 500pcs; custom mold 3000pcs+.'}
+  ]
+};
+
+/* ================= 状态 ================= */
+var LS_KEY = 'gstar_quote_params_v1';
+function loadParams(){
+  try{
+    var raw = localStorage.getItem(LS_KEY);
+    if(!raw) return JSON.parse(JSON.stringify(DEFAULTS));
+    var saved = JSON.parse(raw);
+    return mergeDeep(JSON.parse(JSON.stringify(DEFAULTS)), saved);
+  }catch(e){ return JSON.parse(JSON.stringify(DEFAULTS)); }
+}
+function mergeDeep(base, over){
+  if(!over || typeof over !== 'object') return base;
+  Object.keys(over).forEach(function(k){
+    if(over[k] && typeof over[k]==='object' && !Array.isArray(over[k])){
+      base[k] = mergeDeep(base[k]||{}, over[k]);
+    }else{ base[k] = over[k]; }
+  });
+  return base;
+}
+var S = {
+  cat:'cardslab', lang:'cn', cur:'cny',
+  params: loadParams(),
+  sel:{
+    cardslab:{type:'pc', pt:'35', clarity:'std', finish:'polish', glass:'w20', feature:'none', logo:'none', pack:'opp', mold:'stock'},
+    wallet:{type:'biz', style:'fold2', closure:'elastic', material:'std', metalFinish:'anod', craft:'stitch', lcStitch:'normal', lcEdge:'normal_edge', lcLining:'nonwoven', func:[], accessories:[], logo:'none', pack:'opp', mold:'stock', devFee:'none'}
+  },
+  qty:500, size:'', color:''
+};
+
+/* ================= 工具 ================= */
+function byId(list,id){ for(var i=0;i<list.length;i++){ if(list[i].id===id) return list[i]; } return list[0]; }
+function r2(n){ return Math.round(n*100)/100; }
+function fmt(n){ return n.toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function curSym(){ return S.cur==='usd' ? '$' : '¥'; }
+function cnv(n){ return S.cur==='usd' ? n/S.params.rate : n; }
+function px(n){ return curSym()+fmt(cnv(n)); }
+function pxs(n){ // 加价显示：+¥0.60
+  var v = cnv(n);
+  var s = S.cur==='usd' ? '$' : '¥';
+  return (v>=0?'+':'') + s + fmt(Math.abs(v));
+}
+function L(o){ return S.lang==='en' ? (o.en||o.cn) : (o.cn||o.en); }
+function tierFor(list,qty){
+  var t = list[0];
+  for(var i=0;i<list.length;i++){ if(qty>=list[i].min) t=list[i]; }
+  return t;
+}
+
+/* ================= 计算引擎 ================= */
+function calc(){
+  var cat=S.cat, p=S.params[cat], sel=S.sel[cat];
+  var type=byId(p.types,sel.type), addons=[], addonSum=0;
+  function push(o){ if(o.val!==0){ addons.push(o); addonSum+=o.val; } }
+  if(cat==='cardslab'){
+    push(byId(p.pt,sel.pt));
+    push(byId(p.clarity,sel.clarity));
+    push(byId(p.finish[type.group],sel.finish));
+    if(type.group==='alu') push(byId(p.glass,sel.glass));
+    push(byId(p.feature,sel.feature));
+    push(byId(p.logo,sel.logo));
+    push(byId(p.pack,sel.pack));
+  }else{
+    var mat = byId(p.material,sel.material);
+    push(byId(p.style,sel.style));
+    push(byId(p.closure,sel.closure));
+    push(byId(p.material,sel.material));
+    if(mat.group==='metal') push(byId(p.metalFinish,sel.metalFinish));
+    push(byId(p.craft,sel.craft));
+    if(mat.group==='leather'){
+      push(byId(p.leatherCraft.stitch,sel.lcStitch));
+      push(byId(p.leatherCraft.edge,sel.lcEdge));
+      push(byId(p.leatherCraft.lining,sel.lcLining));
+    }
+    sel.func.forEach(function(id){ push(byId(p.func,id)); });
+    sel.accessories.forEach(function(id){ push(byId(p.accessories,id)); });
+    push(byId(p.logo,sel.logo));
+    push(byId(p.pack,sel.pack));
+  }
+  var tier=tierFor(p.tier,S.qty);
+  var unit=r2((type.base+addonSum)*tier.factor);
+  var goods=r2(unit*S.qty);
+  var mold=byId(p.mold,sel.mold).val;
+  var devFee = cat==='wallet' ? byId(p.devFee,sel.devFee).val : 0;
+  var total=r2(goods+mold+devFee);
+  var isCustom = sel.mold!=='stock' || devFee>0;
+  var lead = cat==='cardslab'
+    ? (sel.mold==='stock' ? (S.lang==='en'?'7–10 days (stock)':'公模现货改色 / 印 LOGO：7–10 天') : (sel.mold==='plastic' ? (S.lang==='en'?'22–28 days (plastic mold)':'ODM 新开塑胶模：22–28 天（含试模样板）') : (S.lang==='en'?'30–40 days (alu mold)':'ODM 新开铝合金压铸 / CNC 模具：30–40 天')))
+    : (isCustom ? (S.lang==='en'?'25–35 days (ODM)':'ODM 定制：25–35 天') : (S.lang==='en'?'10–15 days (stock)':'常规款：10–15 天'));
+  var moq = (sel.mold==='stock' && !isCustom) ? 500 : 3000;
+  return {type:type,addons:addons,addonSum:addonSum,tier:tier,unit:unit,goods:goods,mold:mold,devFee:devFee,total:total,lead:lead,moq:moq,isCustom:isCustom};
+}
+
+/* ================= 渲染：配置器 ================= */
+function chip(label,delta,dim,on,id){
+  return '<button type="button" class="chip'+(on?' on':'')+(dim?' dim':'')+'" data-id="'+id+'">'+label+((delta!==undefined&&delta!==null&&!dim)?'<span class="delta">'+delta+'</span>':'')+'</button>';
+}
+function optCard(title,note,chipsHtml,group){
+  return '<div class="opt-card"><div class="opt-label"><span>'+title+'</span>'+(note?'<span class="note">'+note+'</span>':'')+'</div><div class="chips" data-group="'+group+'">'+chipsHtml+'</div></div>';
+}
+function renderConfig(){
+  var cat=S.cat, p=S.params[cat], sel=S.sel[cat], type=byId(p.types,sel.type), html='';
+  if(cat==='cardslab'){
+    html += optCard(L({cn:'产品类型',en:'Product Type'}), L({cn:'基础工艺：抛光 + 透明',en:'Base: polished + clear'}), p.types.map(function(t){return chip(L(t)+' <span class="delta">'+(S.cur==='usd'?'$'+fmt(cnv(t.base)):'¥'+fmt(t.base))+'</span>',null,false,sel.type===t.id,t.id);}).join(''), 'type');
+    html += optCard(L({cn:'PT 厚度',en:'PT Thickness'}), null, p.pt.map(function(t){return chip(L(t)+' <span class="delta">'+(t.val>0?pxs(t.val):'')+'</span>',null,false,sel.pt===t.id,t.id);}).join(''), 'pt');
+    html += optCard(L({cn:'透明等级',en:'Clarity Grade'}), L({cn:'A 级：无明显水波纹、≤0.1mm 黑点',en:'A-grade: no ripple, ≤0.1mm spec'}), p.clarity.map(function(t){return chip(L(t)+' <span class="delta">'+(t.val>0?pxs(t.val):'')+'</span>',null,false,sel.clarity===t.id,t.id);}).join(''), 'clarity');
+    var fin=p.finish[type.group];
+    html += optCard(L({cn:'表面工艺',en:'Surface Finish'}), L({cn:type.group==='alu'?'铝合金款 · 阳极氧化为基准':'塑胶款 · 抛光为基准',en:type.group==='alu'?'Alu · anodized base':'Plastic · polished base'}), fin.map(function(t){return chip(L(t)+' <span class="delta">'+(t.val>0?pxs(t.val):'')+'</span>',null,false,sel.finish===t.id,t.id);}).join(''), 'finish');
+    var dimGlass = type.group!=='alu';
+    html += optCard(L({cn:'玻璃升级',en:'Glass Upgrade'}), L({cn:'仅铝合金款生效',en:'Alu only'}), p.glass.map(function(t){return chip(L(t)+' <span class="delta">'+(t.val>0?pxs(t.val):'')+'</span>',null,dimGlass,sel.glass===t.id,t.id);}).join(''), 'glass');
+    html += optCard(L({cn:'功能增值',en:'Function Upgrade'}), null, p.feature.map(function(t){return chip(L(t)+' <span class="delta">'+(t.val>0?pxs(t.val):'')+'</span>',null,false,sel.feature===t.id,t.id);}).join(''), 'feature');
+    html += optCard(L({cn:'LOGO',en:'Logo'}), L({cn:'500 pcs 起',en:'min 500pcs'}), p.logo.map(function(t){return chip(L(t)+' <span class="delta">'+(t.val>0?pxs(t.val):'')+'</span>',null,false,sel.logo===t.id,t.id);}).join(''), 'logo');
+    html += optCard(L({cn:'包装',en:'Packaging'}), null, p.pack.map(function(t){return chip(L(t)+' <span class="delta">'+(t.val>0?pxs(t.val):'')+'</span>',null,false,sel.pack===t.id,t.id);}).join(''), 'pack');
+    html += optCard(L({cn:'模具',en:'Mold'}), null, p.mold.map(function(t){return chip(L(t), t.val>0?pxs(t.val):undefined, false, sel.mold===t.id, t.id);}).join(''), 'mold');
+  }else{
+    html += optCard(L({cn:'产品类别',en:'Product Category'}), L({cn:'含基础结构与材质',en:'Base structure & material'}), p.types.map(function(t){return chip(L(t)+' <span class="delta">'+(S.cur==='usd'?'$'+fmt(cnv(t.base)):'¥'+fmt(t.base))+'</span>',null,false,sel.type===t.id,t.id);}).join(''), 'type');
+    html += optCard(L({cn:'结构款式',en:'Structure / Style'}), L({cn:'二折为基准',en:'Bi-fold = base'}), p.style.map(function(t){return chip(L(t)+' <span class="delta">'+(t.val!==0?pxs(t.val):'基准')+'</span>',null,false,sel.style===t.id,t.id);}).join(''), 'style');
+    html += optCard(L({cn:'闭合方式',en:'Closure'}), null, p.closure.map(function(t){return chip(L(t)+' <span class="delta">'+(t.val!==0?pxs(t.val):'')+'</span>',null,false,sel.closure===t.id,t.id);}).join(''), 'closure');
+    // 主材质（按组显示）
+    var matGroups = [['leather',L({cn:'皮革类',en:'Leather'})],['fabric',L({cn:'面料类',en:'Fabric'})],['polymer',L({cn:'高分子 / 复合',en:'Polymer / Composite'})],['metal',L({cn:'金属类',en:'Metal'})],['special',L({cn:'特殊',en:'Special'})]];
+    var matHtml = matGroups.map(function(g){
+      var items = p.material.filter(function(m){ return m.group===g[0]; });
+      if(!items.length) return '';
+      return '<span class="sub">'+g[1]+'</span>'+items.map(function(t){return chip(L(t)+' <span class="delta">'+(t.val!==0?pxs(t.val):'')+'</span>',null,false,sel.material===t.id,t.id);}).join('');
+    }).join('');
+    html += optCard(L({cn:'主材质',en:'Material'}), L({cn:'皮料默认二层 / 超纤；金属默认喷砂阳极',en:'Default 2nd-layer leather; metal defaults to sandblasted anodize'}), matHtml, 'material');
+    var matCur = byId(p.material,sel.material);
+    if(matCur.group==='metal'){
+      html += optCard(L({cn:'金属表面处理',en:'Metal Surface Finish'}), L({cn:'喷砂阳极为基准；PVD / 抛光另计',en:'Anodized = base; PVD / polish extra'}), p.metalFinish.map(function(t){return chip(L(t)+' <span class="delta">'+(t.val>0?pxs(t.val):'')+'</span>',null,false,sel.metalFinish===t.id,t.id);}).join(''), 'metalFinish');
+    }
+    html += optCard(L({cn:'制造工艺',en:'Manufacturing Process'}), L({cn:'冲压 / CNC / 压铸 / 缝制 / 焊接 / 铆接 / 粘合',en:'Stamping / CNC / Die-cast / Stitch / Weld / Rivet / Bond'}), p.craft.map(function(t){return chip(L(t)+' <span class="delta">'+(t.val>0?pxs(t.val):'')+'</span>',null,false,sel.craft===t.id,t.id);}).join(''), 'craft');
+    if(matCur.group==='leather'){
+      html += '<div class="opt-card"><div class="opt-label"><span>'+L({cn:'皮具工艺',en:'Leather Craft'})+'</span><span class="note">'+L({cn:'爆边防护 · 高端皮具溢价',en:'Edge protection · premium craft'})+'</span></div>'+
+        '<div class="chips" data-group="lcStitch">'+p.leatherCraft.stitch.map(function(t){return chip(L(t)+' <span class="delta">'+(t.val>0?pxs(t.val):'')+'</span>',null,false,sel.lcStitch===t.id,t.id);}).join('')+'</div>'+
+        '<div class="chips" data-group="lcEdge" style="margin-top:6px">'+p.leatherCraft.edge.map(function(t){return chip(L(t)+' <span class="delta">'+(t.val>0?pxs(t.val):'')+'</span>',null,false,sel.lcEdge===t.id,t.id);}).join('')+'</div>'+
+        '<div class="chips" data-group="lcLining" style="margin-top:6px">'+p.leatherCraft.lining.map(function(t){return chip(L(t)+' <span class="delta">'+(t.val>0?pxs(t.val):'')+'</span>',null,false,sel.lcLining===t.id,t.id);}).join('')+'</div>'+
+        '</div>';
+    }
+    html += optCard(L({cn:'功能增值（可多选）',en:'Function Add-ons (multi)'}), L({cn:'RFID 单卡位 / 全袋分开报价',en:'RFID single-slot / full-pocket priced separately'}), p.func.map(function(t){return chip(L(t)+' <span class="delta">'+(t.val>0?pxs(t.val):'')+'</span>',null,false,sel.func.indexOf(t.id)>=0,t.id);}).join(''), 'func');
+    html += optCard(L({cn:'配件（可多选）',en:'Accessories (multi)'}), null, p.accessories.map(function(t){return chip(L(t)+' <span class="delta">'+(t.val>0?pxs(t.val):'')+'</span>',null,false,sel.accessories.indexOf(t.id)>=0,t.id);}).join(''), 'accessories');
+    html += optCard(L({cn:'LOGO 工艺',en:'Logo Process'}), L({cn:'500 pcs 起',en:'min 500pcs'}), p.logo.map(function(t){return chip(L(t)+' <span class="delta">'+(t.val>0?pxs(t.val):'')+'</span>',null,false,sel.logo===t.id,t.id);}).join(''), 'logo');
+    html += optCard(L({cn:'包装',en:'Packaging'}), L({cn:'OPP 袋默认免费',en:'OPP default free'}), p.pack.map(function(t){return chip(L(t)+' <span class="delta">'+(t.val>0?pxs(t.val):'')+'</span>',null,false,sel.pack===t.id,t.id);}).join(''), 'pack');
+    html += optCard(L({cn:'开发费用（一次性）',en:'Dev Fee (one-time)'}), L({cn:'打样 / 开模 / 改模，计入总价',en:'Prototype / tooling / modification'}), p.devFee.map(function(t){return chip(L(t), t.val>0?pxs(t.val):undefined, false, sel.devFee===t.id, t.id);}).join(''), 'devFee');
+  }
+  html += optCard(L({cn:'订单数量',en:'Order Qty'}), L({cn:'阶梯价：≥2000 下浮 8–12% · ≥5000 下浮 15–22%',en:'Tier: -8~12% @2000 · -15~22% @5000'}), '<div class="qty-row"><input type="number" id="qtyInput" class="qty-input" min="1" step="1" value="'+S.qty+'"><span class="qty-hint">'+L({cn:'MOQ 公模 500 / 私模 3000 pcs',en:'MOQ stock 500 / custom 3000 pcs'})+'</span></div><div class="qty-row" style="margin-top:8px"><input type="text" id="sizeInput" class="qty-input" placeholder="'+L({cn:'加工尺寸（选填）',en:'Size (optional)'})+'" value="'+(S.size||'')+'"><input type="text" id="colorInput" class="qty-input" placeholder="'+L({cn:'颜色（选填，特殊色另计）',en:'Color (optional, special color extra)'})+'" value="'+(S.color||'')+'"></div>', 'qty');
+  document.getElementById('configBox').innerHTML = html;
+}
+
+/* ================= 渲染：结果 ================= */
+function renderResult(){
+  var r=calc(), cat=S.cat, p=S.params[cat], sel=S.sel[cat], type=r.type;
+  var rows='';
+  rows += '<div class="row"><span class="k">'+L({cn:'产品',en:'Product'})+'</span><span class="v">'+L(type)+'</span></div>';
+  rows += '<div class="row"><span class="k">'+L({cn:'基础单价',en:'Base Price'})+'</span><span class="v">'+px(type.base)+'</span></div>';
+  if(r.addons.length){
+    rows += '<div class="row"><span class="k">'+L({cn:'加价合计',en:'Add-ons'})+'<span class="hint">'+r.addons.map(function(a){return L(a)+' '+pxs(a.val);}).join(' · ')+'</span></span><span class="v">'+px(r.addonSum)+'</span></div>';
+  }else{
+    rows += '<div class="row"><span class="k">'+L({cn:'加价合计',en:'Add-ons'})+'</span><span class="v">'+px(0)+'</span></div>';
+  }
+  rows += '<div class="row"><span class="k">'+L({cn:'折前单价',en:'Pre-Discount Unit'})+'</span><span class="v">'+px(r2(type.base+r.addonSum))+'</span></div>';
+  rows += '<div class="row"><span class="k">'+L({cn:'阶梯折扣',en:'Tier Discount'})+'</span><span class="v">×'+r.tier.factor.toFixed(2)+' <span class="hint">'+(S.lang==='en'?r.tier.label_en:r.tier.label_cn)+'</span></span></div>';
+  rows += '<div class="row"><span class="k">'+L({cn:'最终单价',en:'Unit Price'})+'</span><span class="v">'+px(r.unit)+'</span></div>';
+  rows += '<div class="row"><span class="k">'+L({cn:'货款',en:'Subtotal'})+' <span class="hint">'+S.qty.toLocaleString()+' pcs × '+px(r.unit)+'</span></span><span class="v">'+px(r.goods)+'</span></div>';
+  rows += (cat==='cardslab')
+    ? '<div class="row"><span class="k">'+L({cn:'模具费',en:'Mold Fee'})+'</span><span class="v">'+px(r.mold)+'</span></div>'
+    : '<div class="row"><span class="k">'+L({cn:'开发费用（一次性）',en:'Dev Fee (one-time)'})+'</span><span class="v">'+px(r.devFee)+'<span class="hint">（'+L(byId(p.devFee,sel.devFee))+'）</span></span></div>';
+  rows += '<div class="row total"><span class="k">'+L({cn:'订单总价（含税出厂）',en:'Total (Tax Incl.)'})+'</span><span class="v">'+px(r.total)+'</span></div>';
+  rows += '<div class="row"><span class="k">'+L({cn:'交期',en:'Lead Time'})+'</span><span class="v">'+r.lead+'</span></div>';
+  rows += '<div class="row"><span class="k">'+L({cn:'MOQ',en:'MOQ'})+'</span><span class="v">'+r.moq+' pcs</span></div>';
+  document.getElementById('resultBody').innerHTML = rows;
+  document.getElementById('resQty').textContent = S.qty.toLocaleString()+' pcs';
+  document.getElementById('quoteText').textContent = quoteText(r);
+}
+
+/* ================= 渲染：报价文本 ================= */
+function quoteText(r){
+  var en = S.lang==='en';
+  var cat=S.cat, p=S.params[cat], sel=S.sel[cat], type=r.type;
+  var lines=[];
+  lines.push(en ? 'GSTAR ODM QUOTATION' : '【GSTAR ODM 报价】');
+  lines.push(en ? 'Category: '+(cat==='cardslab'?'Trading Card Slab Case':'Wallet ODM') : '品类：'+(cat==='cardslab'?'评级卡卡套（收藏卡砖）':'钱包 ODM'));
+  var opts=[L(type)];
+  if(cat==='cardslab'){
+    opts.push(L(byId(p.pt,sel.pt)), L(byId(p.clarity,sel.clarity)), L(byId(p.finish[type.group],sel.finish)));
+    if(type.group==='alu') opts.push(L(byId(p.glass,sel.glass)));
+    opts.push(L(byId(p.feature,sel.feature)), L(byId(p.logo,sel.logo)), L(byId(p.pack,sel.pack)));
+  }else{
+    var mat = byId(p.material,sel.material);
+    opts.push(L(byId(p.style,sel.style)), L(byId(p.closure,sel.closure)), L(mat));
+    if(mat.group==='metal') opts.push(L(byId(p.metalFinish,sel.metalFinish)));
+    opts.push(L(byId(p.craft,sel.craft)));
+    if(mat.group==='leather') opts.push(L(byId(p.leatherCraft.stitch,sel.lcStitch)), L(byId(p.leatherCraft.edge,sel.lcEdge)), L(byId(p.leatherCraft.lining,sel.lcLining)));
+    sel.func.forEach(function(id){ opts.push(L(byId(p.func,id))); });
+    sel.accessories.forEach(function(id){ opts.push(L(byId(p.accessories,id))); });
+    opts.push(L(byId(p.logo,sel.logo)), L(byId(p.pack,sel.pack)));
+  }
+  lines.push(en?'Specs: '+opts.join(' · '):'产品：'+opts.join(' · '));
+  if(cat==='wallet' && (S.size || S.color)){
+    lines.push(en?'Size / Color: '+(S.size||'per drawing')+' / '+(S.color||'per PPS sample')+' (special color extra)':'尺寸 / 颜色：'+(S.size||'按图纸')+' / '+(S.color||'以产前样为准')+'（特殊色另计）');
+  }
+  lines.push(en?'Qty: '+S.qty.toLocaleString()+' pcs':'数量：'+S.qty.toLocaleString()+' pcs');
+  lines.push(en?'Unit Price: '+px(r.unit)+' (tax incl., EXW Dongguan)':'最终单价：'+px(r.unit)+'（含税出厂，EXW 东莞）');
+  lines.push(en?'Amount: '+px(r.goods):'货款：'+px(r.goods));
+  lines.push(cat==='cardslab'
+    ? (en?'Mold Fee: '+px(r.mold)+' ('+L(byId(p.mold,sel.mold))+')':'模具费：'+px(r.mold)+'（'+L(byId(p.mold,sel.mold))+'）')
+    : (en?'Dev Fee (one-time): '+px(r.devFee)+' ('+L(byId(p.devFee,sel.devFee))+')':'开发费用（一次性）：'+px(r.devFee)+'（'+L(byId(p.devFee,sel.devFee))+'）'));
+  lines.push(en?'TOTAL: '+px(r.total):'订单总价：'+px(r.total));
+  lines.push(en?'Lead Time: '+r.lead:'交期：'+r.lead);
+  lines.push(en?'Valid: 30 days':'报价有效期：30 天');
+  lines.push(en?'Notes: MOQ '+r.moq+' pcs; freight excluded; approved sample as acceptance; test reports extra.':'备注：MOQ '+r.moq+' pcs；不含运费；色差以签样为准；检测报告另计。');
+  if(cat==='wallet'){
+    lines.push(en?'Guard: leather defaults 2nd-layer / microfiber; metal defaults sandblasted anodized; RFID priced per single-slot / full-pocket. Combo (wallet+slab case) -5~8% bundle.':'防控：皮料默认二层/超纤，金属默认喷砂阳极，RFID 按单卡位/全袋分开报价；钱包+卡套组合套餐可打包下浮 5–8%。');
+  }
+  return lines.join('\n');
+}
+
+/* ================= 渲染：价目参考 ================= */
+function th(arr){ return '<tr>'+arr.map(function(a){return '<th>'+a+'</th>';}).join('')+'</tr>'; }
+function td(arr){ return '<tr>'+arr.map(function(a){return '<td>'+a+'</td>';}).join('')+'</tr>'; }
+function refBlock(title,tableHtml,note){
+  return '<div class="ref-card" style="margin-bottom:14px"><div class="section-title" style="margin-bottom:10px"><span>'+title+'</span></div><div class="table-scroll"><table>'+tableHtml+'</table></div>'+(note?'<div class="tbl-note">'+note+'</div>':'')+'</div>';
+}
+function renderRef(){
+  var en = S.lang==='en', html='';
+  if(S.cat==='cardslab'){
+    html += refBlock(en?'Plastic Cases':'一、塑胶款卡套（硅胶 / TPU / PC / TPU+PC / 硅胶+PC）',
+      th([en?'Material':'材质组合',en?'Structure':'基础结构',en?'Unit (≥500)':'基础工艺单价（≥500pcs）',en?'Spray +':'喷油/喷粉加价',en?'Plating +':'真空镀/电镀加价',en?'Notes':'备注'])+
+      td([en?'PC (pure)':'PC（纯 PC 卡砖）',en?'No back':'无背板','¥2.60','+0.6','+1.3',en?'Std PSA slab, ultrasonic; UV material +0.4':'标准 PSA 卡砖，超声波焊接，防 UV 料另加 0.4'])+
+      td([en?'TPU+PC':'TPU+PC',en?'No back':'无背板','¥3.20','+0.7','+1.4',en?'TPU soft edge, drop-resistant, bestseller':'TPU 软包边，防摔抗散边，跨境爆款'])+
+      td([en?'Silicone+PC':'硅胶+PC',en?'No back':'无背板','¥3.60','+0.7',en?'Plating N/R':'不推荐电镀',en?'Silicone cushion, matte; plating low yield':'硅胶缓冲，手感哑光，电镀良率低'])+
+      td([en?'TPU+PC':'TPU+PC',en?'Single back':'单肖背板','¥3.70','+0.75','+1.5',en?'Detachable back':'可拆卸背板'])+
+      td([en?'TPU+PC':'TPU+PC',en?'Double back':'双肖背板','¥4.10','+0.8','+1.6',en?'Double-layer back':'双层背板结构']),
+      en?'Tier: -8% ≥2000pcs · -15% ≥5000pcs · Mold: single-cavity 6000–9000 CNY, free if stock mold reused':'阶梯价：≥2000pcs 下浮 8%；≥5000pcs 下浮 15% · 模具费：塑胶单腔模 6000~9000 元，复用公模免模具费');
+    html += refBlock(en?'Aluminum Cases':'二、铝合金评级卡保护壳（磁吸款 / 卡扣款，双玻璃背板）',
+      th([en?'Structure':'结构类型',en?'Base (Anodized ≥300)':'基础表面（阳极氧化）≥300pcs',en?'Plating +':'电镀加价',en?'Spray +':'喷油/喷粉加价',en?'Notes':'备注'])+
+      td([en?'Magnetic (dual glass)':'磁吸铝合金壳（双玻璃背板）','¥18.5','+4.5','+2.8',en?'Main export type, strong magnet, UV glass':'主流外贸款，强磁、防 UV 玻璃'])+
+      td([en?'Snap-lock (dual glass)':'卡扣铝合金壳（双玻璃背板）','¥16.2','+4.2','+2.5',en?'Magnet-free, for magnet-restricted platforms':'无磁方案，适合部分平台禁磁客户']),
+      en?'Mold: 1 set (one structure) CNC/die-cast 12000–18000 · 2 sets (magnetic+snap) from 24000 · Glass: hi-trans UV +2.2/pc':'模具：1 套模（单款结构）CNC 工装/压铸模 12000–18000；2 套模打包 24000 起 · 玻璃：升级高透防 UV +2.2 元/个');
+    html += refBlock(en?'ODM Extra Charges':'三、ODM 附加收费项',
+      th([en?'Item':'项目',en?'Charge':'收费标准'])+
+      td([en?'Silkscreen / Laser Logo':'丝印 / 激光 LOGO',en?'Laser: 0.3–0.6/pc; silkscreen: 0.5–1.0/pc (min 500)':'激光镭雕 0.3~0.6 元/pcs；丝印 0.5~1.0 元/pcs（500 起）'])+
+      td([en?'New Color Sample':'新颜色打样费',en?'Plastic spray 300/color; alu anodize 400/color':'塑胶喷油 300/色；铝氧化 400/色'])+
+      td([en?'Samples':'样板费',en?'Stock sample 30–80 (refunded on order); new mold hand sample 300–800':'公模样板 30–80 元/款（大货返还）；新开模手板 300–800/套'])+
+      td([en?'Packaging':'独立彩盒包装',en?'White box + blister +1.8; gift box +3.5–6':'白盒+吸塑 +1.8 元；彩印礼盒 +3.5~6 元'])+
+      td([en?'Function Upgrade':'特殊功能升级',en?'UV material +0.4–0.8/pc; scratch coating +0.5/pc':'防 UV 原料 +0.4~0.8/pcs；耐磨抗刮涂层 +0.5/pcs'])+
+      td([en?'Freight':'运费',en?'Freight excluded; FOB Dongguan on request':'不含运费；FOB 东莞可单独核算']),
+      null);
+  }else{
+    html += refBlock(en?'Base Price by Category':'一、钱包产品类别基准价',
+      th([en?'Category':'产品类别',en?'Unit (≥500)':'基础单价（≥500pcs）',en?'Materials / Desc':'材质 / 描述'])+
+      td([en?'Biz Wallet':'商务钱包','¥12.8',en?'Leather / PU / microfiber / canvas':'牛皮 / PU / 超纤 / 帆布'])+
+      td([en?'Outdoor Wallet':'运动 / 户外钱包','¥9.5',en?'Nylon / polyester / TPU composite':'尼龙 / 涤纶 / TPU 复合面料'])+
+      td([en?'Card Case / ID Holder':'证件夹 / 卡包','¥6.8',en?'Leather / PVC / silicone / metal frame':'皮革 / PVC / 硅胶 / 金属边框'])+
+      td([en?'Custom Special':'定制特殊款','¥26.0',en?'Metal shell + leather / silicone':'金属外壳 + 皮革 / 硅胶复合']),
+      en?'Tier: <500 +15% · ≥2000 -8~12% · ≥5000 -15~22%':'阶梯价：＜500 加价 15%；≥2000 下浮 8~12%；≥5000 下浮 15~22%');
+    html += refBlock(en?'Structure & Closure':'二、结构款式与闭合加价',
+      th([en?'Item':'项目',en?'Options / Charge':'选项 / 加价'])+
+      td([en?'Structure':'结构款式',en?'Bi-fold base · Tri-fold +1.8 · Single-fold -0.5 · Expansion band +1.5 · Zipper style +2.5 · Metal shell +12.0':'二折=基准 · 三折 +1.2~2.5 · 一折 -0.5 · 扩容带 +1.5 · 拉链款 +1.8~3.2 · 金属外壳款 +8~18'])+
+      td([en?'Closure':'闭合方式',en?'Elastic band / snap free · Button +0.3 · Magnet +0.8 · Zipper +1.2':'弹力带 / 弹卡免费 · 纽扣 +0.3 · 磁吸（磁扣）+0.4~1.2 · 拉链 +0.5~1.8']),
+      null);
+    html += refBlock(en?'Material Matrix':'三、材质升级矩阵（相对基准）',
+      th([en?'Group':'分组',en?'Options':'选项',en?'Charge':'加价'])+
+      td([en?'Leather':'皮革类',en?'2nd-layer / microfiber & PU base · Top-grain +4.5 · Regenerated -1.0':'二层 / 超纤、PU=基准 · 头层牛皮 +3~6.5 · 再生皮可降价'])+
+      td([en?'Fabric':'面料类',en?'Nylon base · Cordura +1.8 · X-Pac +3.2 · Waterproof +1.6':'尼龙=基准 · 考杜拉 +1~2.5 · X-Pac（户外 EDC 溢价）· 防水复合 +1~2.2'])+
+      td([en?'Polymer / Composite':'高分子 / 复合',en?'TPU +0.5 · POM/PA6 +0.6 · Carbon fiber +8.0 · Resin / fiberglass +2.5':'TPU +0.5 · POM/PA6 +0.6 · 碳纤维 +8.0 · 树脂/玻纤板 +2.5'])+
+      td([en?'Metal':'金属类',en?'Alu +5.0 · Steel +6.0 · Titanium +15.0 · Brass +4.0 · Zinc alloy +4.5':'铝合金 +5.0 · 不锈钢 +6.0 · 钛合金 +15.0 · 黄铜 +4.0 · 锌合金 +4.5'])+
+      td([en?'Special':'特殊',en?'Wood +6.0 · Forged texture +9.0':'木纹 +6.0 · 锻造纹 +9.0']),
+      en?'Metal defaults sandblasted anodized; other finishes priced separately.':'金属默认喷砂阳极，其他表面工艺单独加价（防亏损）。');
+    html += refBlock(en?'Surface, Process & Leather Craft':'四、表面处理 / 制造 / 皮具工艺',
+      th([en?'Item':'项目',en?'Options / Charge':'选项 / 加价'])+
+      td([en?'Metal Surface':'金属表面处理',en?'Anodized base · PVD +8~16 · Polish +3~6 · Brushed +2 · Laser etch +1.5 · Powder +2 · Drop oil +2.5 · Antique +3':'喷砂阳极=基准 · PVD +8~16 · 抛光 +3~6 · 拉丝 +2 · 镭雕 +1.5 · 喷塑 +2 · 滴油 +2.5 · 仿古做旧 +3'])+
+      td([en?'Manufacturing':'制造工艺',en?'Stamping base · CNC +1.0 · Die casting +2.0 · Stitching base · Welding +1.5 · Riveting +1.0 · Bonding base':'金属冲压 / 拼接缝制=基准 · CNC +1.0 · 压铸 +2.0 · 焊接 +1.5 · 铆接 +1.0 · 粘合基准'])+
+      td([en?'Leather Craft':'皮具工艺',en?'Stitch: regular / saddle +1.2~3 · Edge: regular / premium +0.7~1.5 · Lining: nonwoven / microfiber +0.8 / flock +1~2.2':'车线：普通/马鞍线 +1.2~3 · 油边：普通/高档封边油 +0.7~1.5（防爆边）· 内衬：无纺布/超纤 +0.8/植绒 +1~2.2']),
+      en?'Edge painting is the #1 dispute point — premium edge priced separately.':'油边是皮具最大纠纷点，高档封边油单独收费。');
+    html += refBlock(en?'Function & Accessories':'五、功能增值与配件',
+      th([en?'Item':'项目',en?'Options / Charge':'选项 / 加价'])+
+      td([en?'RFID Blocking':'RFID 防磁',en?'Single-slot +1~2 · Full-pocket +2~3 (priced separately, not default)':'单卡位屏蔽 +1~2；全袋屏蔽 +2~3（分开报价，不默认全防磁）'])+
+      td([en?'Anti-Bend Guard':'防折弯加固片',en?'+0.8~1.8 (PC / fiberglass, EDC hot seller)':'PC / 玻纤加固片 +0.8~1.8（EDC 爆款卖点）'])+
+      td([en?'Card Slots':'卡位规格',en?'Std bank card 85.5×54 base · Non-std (grading / license / passport) +1.5~3 · Elastic 6-slot +0.9 · 8-slot +1.8':'标准银行卡位 85.5×54=基准 · 非标（评级卡/驾照/护照）+1.5~3 · 弹力 6 卡位 +0.9 · 8 卡位 +1.8'])+
+      td([en?'Structure':'结构增值',en?'Detachable +2~4 · Salt-spray / UV resistant +1.5':'可拆结构 +2~4 · 防盐雾 / 耐 UV +1.5'])+
+      td([en?'Accessories':'配件',en?'Tracker pocket +2.0 · Zipper +0.5~1.8 · Button +0.3 · Snap (quick-open) +0.5 · Wrist strap / lanyard +0.6~1.5 · Inner card pages +0.3~0.8/pg':'追踪器位 +2.0 · 拉链 +0.5~1.8 · 扣子 +0.3 · 按钮（弹合装置）+0.5 · 手腕带 / 挂绳 +0.6~1.5 · 内页卡片位 +0.3~0.8/页']),
+      null);
+    html += refBlock(en?'Logo, Packaging & Dev Fee':'六、LOGO / 包装 / 开发费用',
+      th([en?'Item':'项目',en?'Options / Charge':'选项 / 加价'])+
+      td([en?'Logo Process':'LOGO 工艺',en?'Screen +0.4~0.9 · Laser +0.5~1.2 · Hot foil +0.6~1.5 · Embroidery +0.8~2.0 · Epoxy badge +1.0~2.5 · Metal plate +1.5~4.0 · Emboss +2.0':'丝印 +0.4~0.9 · 激光雕刻 +0.5~1.2 · 压印烫金 +0.6~1.5 · 刺绣 +0.8~2.0 · 滴胶/胶章 +1.0~2.5 · 金属铭牌 +1.5~4.0 · 热压浮雕 +2.0'])+
+      td([en?'Packaging':'包装',en?'OPP free · Cotton +0.6~1.5 · Velvet +1~2.5 · Blister tray +1.2 · White box +2~3 · Color box +3~6 · Window gift box +5~10 · Hang tag / wash label +0.3~1.2':'OPP 免费 · 棉布袋 +0.6~1.5 · 植绒袋 +1~2.5 · 吸塑内托 +1.2 · 白盒 +2~3 · 彩盒 +3~6 · 开窗礼盒 +5~10 · 吊牌 / 洗水标 +0.3~1.2'])+
+      td([en?'ODM Dev Fee':'开发费用（一次性）',en?'3D prototype ¥100~300 · Hand sample ¥200~600 · Leather die ¥300~1200 · Metal casting mold ¥1500~4000 · Modification ¥100~800':'3D 打样 100~300 · 手板样 200~600 · 皮具刀模 300~1200 · 金属压铸模 1500~4000 · 改模 100~800/次']),
+      en?'Sample split: appearance hand sample (no production) vs PPS pre-production sample (bulk material + process, signed as acceptance).':'打样区分：外观手板样（不能量产）与 PPS 产前确认样（大货料+大货工艺，签样为验收标准）。');
+    html += refBlock(en?'Recommended Premium Options':'七、可主推的高端选项',
+      th([en?'Option':'选项',en?'Selling Point':'卖点'])+
+      td([en?'RFID Blocking':'RFID 防磁',en?'Protects card info':'保护银行卡信息'])+
+      td([en?'Metal Nameplate Logo':'金属铭牌 LOGO',en?'Premium gifting feel':'提升礼品感和品牌质感'])+
+      td([en?'Hot Foil Stamping':'烫金压印',en?'Biz gift box choice':'商务礼盒优选'])+
+      td([en?'Waterproof Fabric':'防水面料',en?'Outdoor, sports, travel':'户外、运动、旅行场景'])+
+      td([en?'Gift Box Set':'礼盒套装',en?'For corporate gifting':'适合企业礼品、品牌赠品'])+
+      td([en?'Combo (Wallet + Slab Case)':'组合套餐（钱包+卡套）',en?'Bundle -5~8% (unique product line)':'打包下浮 5~8%（独有产品线优势）']),
+      en?'Compliance options: REACH / ROHS / Prop65 reports charged separately.':'合规检测：REACH / ROHS / 加州 65 报告单独收费。');
+  }
+  html += refBlock(en?'Delivery & Notes':'四、交期与备注',
+    th([en?'Item':'项目',en?'Detail':'说明'])+
+    (S.cat==='cardslab'
+      ? td([en?'Lead Time':'交期',en?'Stock 7–10 days · Plastic mold 22–28 · Alu mold 30–40':'公模现货 7–10 天 · ODM 塑胶模 22–28 天 · 铝合金压铸/CNC 模 30–40 天'])+
+        td([en?'Notes':'备注',en?'PSA/CGC/BGS 35PT fit; non-std PT re-quoted · Plating/vacuum adds 2–4 days · Mold refund negotiable ≥20,000pcs · Acid-free by default':'适配 PSA 35PT、CGC、BGS；其他 PT 重新核价 · 电镀/真空镀交期 +2–4 天 · 订单量≥2 万可协商返还模具费 · 默认无酸原料'])
+      : td([en?'Lead Time':'交期',en?'Stock 10–15 days · ODM 25–35 days':'常规款 10–15 天；ODM 定制 25~35 天'])+
+        td([en?'Terms':'贸易与售后',en?'EXW / FOB Dongguan · Color by approved sample (natural leather variance) · After-sales prorated for non-human defects; no return after sample approval':'EXW/FOB 东莞 · 色差以签样为准（真皮存在天然差异）· 非人为质量问题按比例承担；签样后量产不退换'])),
+    null);
+  document.getElementById('refTables').innerHTML = html;
+}
+
+/* ================= 渲染：条款 ================= */
+function renderTerms(){
+  var en = S.lang==='en';
+  document.getElementById('termsList').innerHTML = S.params.terms.map(function(t){return '<li><b>'+ (en?'T'+(S.params.terms.indexOf(t)+1):'条款 '+(S.params.terms.indexOf(t)+1)) +'</b>　'+(en?t.en:t.cn)+'</li>';}).join('');
+}
+
+/* ================= 语言 / 货币 ================= */
+function applyLang(){
+  var en = S.lang==='en';
+  document.documentElement.lang = en?'en':'zh-CN';
+  document.querySelectorAll('[data-cn]').forEach(function(el){
+    el.textContent = en ? (el.getAttribute('data-en')||el.getAttribute('data-cn')) : el.getAttribute('data-cn');
+  });
+  document.querySelectorAll('#langSeg button').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-lang')===S.lang); });
+  document.querySelectorAll('#curSeg button').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-cur')===S.cur); });
+  renderAll();
+}
+
+/* ================= 全部渲染 ================= */
+function renderAll(){
+  document.getElementById('quoteTitle').textContent = S.cat==='cardslab' ? (S.lang==='en'?'Trading Card Slabs':'评级卡卡套') : (S.lang==='en'?'Wallet ODM':'钱包 ODM');
+  renderConfig(); renderResult(); renderRef(); renderTerms();
+}
+
+/* ================= 维护面板 ================= */
+function setPath(obj,path,val){
+  var parts=path.split('.'), o=obj;
+  for(var i=0;i<parts.length-1;i++){ o=o[parts[i]]; }
+  o[parts[parts.length-1]] = val;
+}
+function getPath(obj,path){
+  var parts=path.split('.'), o=obj;
+  for(var i=0;i<parts.length;i++){ o=o[parts[i]]; }
+  return o;
+}
+function flatParams(p){
+  var list=[];
+  list.push({path:'rate', cn:'汇率 USD / CNY', en:'Exchange USD / CNY', val:p.rate, step:0.01, group:'sys'});
+  ['cardslab','wallet'].forEach(function(cat){
+    var d=p[cat];
+    var gName = cat==='cardslab' ? {cn:'卡套',en:'Card Slab'} : {cn:'钱包',en:'Wallet'};
+    d.types.forEach(function(t){ list.push({path:cat+'.types.'+t.id+'.base', label:t, val:t.base, step:0.1, group:cat+'_base'}); });
+    ['pt','clarity','feature','logo','pack','style','closure','material','metalFinish','craft','func','accessories','devFee'].forEach(function(sec){
+      if(d[sec]) d[sec].forEach(function(o){ list.push({path:cat+'.'+sec+'.'+o.id+'.val', label:o, val:o.val, step:o.val>=1000?100:(o.val>=100?10:0.05), group:cat+'_add'}); });
+    });
+    if(d.leatherCraft){ ['stitch','edge','lining'].forEach(function(g){ d.leatherCraft[g].forEach(function(o){ list.push({path:cat+'.leatherCraft.'+g+'.'+o.id+'.val', label:o, val:o.val, step:0.05, group:cat+'_add'}); }); }); }
+    if(d.finish){ ['plastic','alu'].forEach(function(g){ d.finish[g].forEach(function(o){ list.push({path:cat+'.finish.'+g+'.'+o.id+'.val', label:o, val:o.val, step:0.05, group:cat+'_add'}); }); }); }
+    if(d.glass){ d.glass.forEach(function(o){ list.push({path:cat+'.glass.'+o.id+'.val', label:o, val:o.val, step:0.05, group:cat+'_add'}); }); }
+    if(d.mold){ d.mold.forEach(function(o){ list.push({path:cat+'.mold.'+o.id+'.val', label:o, val:o.val, step:o.val>=1000?500:(o.val>=100?50:10), group:cat+'_mold'}); }); }
+    if(d.tier){ d.tier.forEach(function(t2,i){ list.push({path:cat+'.tier.'+i+'.factor', cn:'阶梯 · '+t2.label_cn, en:'Tier · '+t2.label_en, val:t2.factor, step:0.01, group:cat+'_tier'}); }); }
+  });
+  return list;
+}
+var SHEET_GROUPS = [
+  {id:'sys', cn:'汇率', en:'Exchange Rate'},
+  {id:'cardslab_base', cn:'卡套 · 产品基准价', en:'Card Slab · Base'},
+  {id:'cardslab_add', cn:'卡套 · 加价项（CNY）', en:'Card Slab · Add-ons (CNY)'},
+  {id:'cardslab_mold', cn:'卡套 · 模具费', en:'Card Slab · Mold Fee'},
+  {id:'cardslab_tier', cn:'卡套 · 阶梯折扣系数', en:'Card Slab · Tier Factor'},
+  {id:'wallet_base', cn:'钱包 · 产品基准价', en:'Wallet · Base'},
+  {id:'wallet_add', cn:'钱包 · 加价项（CNY）', en:'Wallet · Add-ons (CNY)'},
+  {id:'wallet_mold', cn:'钱包 · 模具费', en:'Wallet · Mold Fee'},
+  {id:'wallet_tier', cn:'钱包 · 阶梯折扣系数', en:'Wallet · Tier Factor'}
+];
+function renderSheet(){
+  var en = S.lang==='en', list = flatParams(S.params), html='';
+  SHEET_GROUPS.forEach(function(g){
+    var items = list.filter(function(it){ return it.group===g.id; });
+    if(!items.length) return;
+    html += '<h3>'+ (en?g.en:g.cn) +'</h3><div class="param-grid">';
+    items.forEach(function(it){
+      var label = it.label ? (en? (it.label.en||it.label.cn) : it.label.cn) : (en?it.en:it.cn);
+      html += '<div class="param"><span class="p-label">'+label+'<small>'+it.path+'</small></span><input type="number" step="'+it.step+'" data-param="'+it.path+'" value="'+it.val+'"></div>';
+    });
+    html += '</div>';
+  });
+  document.getElementById('sheetBody').innerHTML = html;
+}
+function openSheet(){ document.getElementById('sheet').classList.add('show'); document.getElementById('scrim').classList.add('show'); document.body.style.overflow='hidden'; renderSheet(); }
+function closeSheet(){ document.getElementById('sheet').classList.remove('show'); document.getElementById('scrim').classList.remove('show'); document.body.style.overflow=''; }
+function saveParams(){
+  document.querySelectorAll('[data-param]').forEach(function(inp){
+    var v = parseFloat(inp.value);
+    if(isNaN(v)) return;
+    setPath(S.params, inp.getAttribute('data-param'), v);
+  });
+  localStorage.setItem(LS_KEY, JSON.stringify(S.params));
+  closeSheet(); renderAll(); showToast(S.lang==='en'?'Saved. Prices updated.':'已保存，价格已更新。');
+}
+function restoreParams(){
+  localStorage.removeItem(LS_KEY);
+  S.params = JSON.parse(JSON.stringify(DEFAULTS));
+  closeSheet(); renderAll(); showToast(S.lang==='en'?'Default prices restored.':'已恢复默认价。');
+}
+
+/* ================= 视图 ================= */
+function showView(v){
+  document.getElementById('view-home').hidden = v!=='home';
+  document.getElementById('view-quote').hidden = v!=='quote';
+  if(v==='quote'){ renderAll(); }
+  window.scrollTo(0,0);
+}
+
+/* ================= 事件 ================= */
+var toastTimer=null;
+function showToast(msg){
+  var el=document.getElementById('toast');
+  el.textContent=msg; el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(function(){ el.classList.remove('show'); }, 1800);
+}
+function copyText(text){
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(function(){ showToast(S.lang==='en'?'Copied!':'已复制！'); }, function(){ legacyCopy(text); });
+  }else{ legacyCopy(text); }
+}
+function legacyCopy(text){
+  var ta=document.createElement('textarea');
+  ta.value=text; ta.style.position='fixed'; ta.style.opacity='0';
+  document.body.appendChild(ta); ta.select();
+  try{ document.execCommand('copy'); showToast(S.lang==='en'?'Copied!':'已复制！'); }catch(e){ showToast(S.lang==='en'?'Copy failed':'复制失败'); }
+  document.body.removeChild(ta);
+}
+
+document.addEventListener('click', function(e){
+  var t = e.target.closest ? e.target.closest('[data-cat]') : null;
+  if(t){ S.cat=t.getAttribute('data-cat'); showView('quote'); return; }
+  if(e.target.closest && (t=e.target.closest('#langSeg button'))){ S.lang=t.getAttribute('data-lang'); applyLang(); return; }
+  if(e.target.closest && (t=e.target.closest('#curSeg button'))){ S.cur=t.getAttribute('data-cur'); applyLang(); return; }
+  if(e.target.closest && (t=e.target.closest('#brandHome'))){ showView('home'); return; }
+  if(e.target.closest && (t=e.target.closest('#btnBack'))){ showView('home'); return; }
+  if(e.target.closest && (t=e.target.closest('#btnCopy'))){ copyText(document.getElementById('quoteText').textContent); return; }
+  if(e.target.closest && (t=e.target.closest('#btnPrint'))){ window.print(); return; }
+  if(e.target.closest && (t=e.target.closest('#btnReset'))){
+    S.sel.cardslab={type:'pc',pt:'35',clarity:'std',finish:'polish',glass:'w20',feature:'none',logo:'none',pack:'opp',mold:'stock'};
+    S.sel.wallet={type:'biz', style:'fold2', closure:'elastic', material:'std', metalFinish:'anod', craft:'stitch', lcStitch:'normal', lcEdge:'normal_edge', lcLining:'nonwoven', func:[], accessories:[], logo:'none', pack:'opp', mold:'stock', devFee:'none'};
+    S.qty=500; S.size=''; S.color=''; renderAll();
+    showToast(S.lang==='en'?'Configuration reset.':'已重置配置。');
+    return;
+  }
+  if(e.target.closest && (t=e.target.closest('#btnAdmin'))){ openSheet(); return; }
+  if(e.target.closest && (t=e.target.closest('#btnSheetClose'))){ closeSheet(); return; }
+  if(e.target.closest && (t=e.target.closest('#btnSaveParams'))){ saveParams(); return; }
+  if(e.target.closest && (t=e.target.closest('#btnResetParams'))){ restoreParams(); return; }
+  if(e.target.closest && (t=e.target.closest('#scrim'))){ closeSheet(); return; }
+
+  var chip = e.target.closest ? e.target.closest('.chip') : null;
+  if(chip){
+    var groupEl = chip.closest('[data-group]');
+    if(!groupEl) return;
+    var group = groupEl.getAttribute('data-group');
+    var id = chip.getAttribute('data-id');
+    if(group==='func' || group==='accessories'){
+      var arr = S.sel[S.cat][group];
+      var i = arr.indexOf(id);
+      if(i>=0){ arr.splice(i,1); }
+      else{
+        arr.push(id);
+        if(group==='func'){
+          if(id==='rfid_single' && arr.indexOf('rfid_full')>=0) arr.splice(arr.indexOf('rfid_full'),1);
+          if(id==='rfid_full' && arr.indexOf('rfid_single')>=0) arr.splice(arr.indexOf('rfid_single'),1);
+          if(id==='elastic6' && arr.indexOf('elastic8')>=0) arr.splice(arr.indexOf('elastic8'),1);
+          if(id==='elastic8' && arr.indexOf('elastic6')>=0) arr.splice(arr.indexOf('elastic6'),1);
+        }
+      }
+    }else{
+      S.sel[S.cat][group] = id;
+    }
+    if(S.cat==='cardslab' && group==='type'){
+      var type = byId(S.params.cardslab.types, id);
+      var finId = S.sel.cardslab.finish;
+      var exists = S.params.cardslab.finish[type.group].some(function(f){ return f.id===finId; });
+      if(!exists){ S.sel.cardslab.finish = type.group==='alu' ? 'anod' : 'polish'; }
+      // 模具类型跟随材质组联动，避免「铝壳配塑胶模」错配
+      if(type.group==='alu' && S.sel.cardslab.mold==='plastic'){ S.sel.cardslab.mold='alu'; }
+      if(type.group==='plastic' && S.sel.cardslab.mold==='alu'){ S.sel.cardslab.mold='plastic'; }
+    }
+    renderConfig(); renderResult();
+  }
+});
+
+document.addEventListener('input', function(e){
+  if(e.target && e.target.id==='qtyInput'){
+    var v = parseInt(e.target.value, 10);
+    S.qty = (!isNaN(v) && v>0) ? v : 1;
+    renderResult();
+  }
+  if(e.target && e.target.id==='sizeInput'){ S.size = e.target.value; renderResult(); }
+  if(e.target && e.target.id==='colorInput'){ S.color = e.target.value; renderResult(); }
+});
+
+/* ================= 启动 ================= */
+applyLang();
+showView('home');
+})();
+</script>
+</body>
+</html>
